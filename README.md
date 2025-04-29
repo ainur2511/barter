@@ -108,7 +108,11 @@ python manage.py test
   - `views.py`: Представления (например, `AdListView`, `AdCreateView`).
   - `forms.py`: Формы (например, `AdForm`, `ExchangeProposalForm`).
   - `tests.py`: Тесты для моделей и представлений.
-- **`templates/`**: Шаблоны HTML.
+  - `urls.py`: Файл маршрутов приложения, подключенный к основному
+- **`ads/templates/`**: Шаблоны HTML.
+- ** `core/`: директория с основными настройками проекта.
+  - `settings.py`: основные настройки проекта
+  - `urls.py`: Основной файл маршрутов
 - **`manage.py`**: Утилита для управления проектом.
 - **`requirements.txt`**: Список зависимостей.
 
