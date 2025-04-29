@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Ad, ExchangeProposal
 from .forms import AdForm, AdFilterForm, ExchangeProposalForm
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 
 
@@ -231,3 +231,7 @@ class ExchangeProposalListView(LoginRequiredMixin, ListView):
         context['filter_receiver'] = self.request.GET.get('receiver', '')
         context['filter_status'] = self.request.GET.get('status', '')
         return context
+
+
+
+
