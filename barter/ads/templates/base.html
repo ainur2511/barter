@@ -104,6 +104,9 @@
                         <li class="nav-item">
                             <a class="btn btn-primary" href="{% url 'create_ad' %}">Создать объявление</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="{% url 'exchange_proposals' %}">Предложения обмена</a>
+                        </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
@@ -132,14 +135,26 @@
         </div>
     </nav>
 
+
+
     <!-- Основной контент -->
     <div class="container mt-4">
+        <!-- Вывод сообщений Django -->
+        {% if messages %}
+        <div id="django-messages" style="display: none;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}
         {% endblock %}
     </div>
 
     <!-- Подключение Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Скрипт для показа/скрытия пароля -->
     <script>
@@ -158,6 +173,26 @@
                     this.classList.toggle('bi-eye-slash');
                 });
             });
+        });
+    </script>
+
+    <script>
+        // Обработка сообщений Django через SweetAlert2
+        document.addEventListener("DOMContentLoaded", function () {
+            const messagesDiv = document.getElementById("django-messages");
+            if (messagesDiv) {
+                const messages = messagesDiv.querySelectorAll(".alert");
+                messages.forEach(message => {
+                    const type = message.classList.contains("alert-success") ? "success" :
+                                 message.classList.contains("alert-error") ? "error" :
+                                 message.classList.contains("alert-warning") ? "warning" : "info";
+                    Swal.fire({
+                        icon: type,
+                        title: type === "success" ? "Успех!" : "Ошибка!",
+                        text: message.textContent.trim(),
+                    });
+                });
+            }
         });
     </script>
 </body>

@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 from .views import AdListView, AdCreateView, AdDetailView, AdUpdateView, AdDeleteView, CreateExchangeProposalView, \
-    UpdateExchangeProposalStatusView, ExchangeProposalListView
+    UpdateExchangeProposalStatusView, ExchangeProposalListView, CustomLoginView, RegisterView, CustomLogoutView
 
 urlpatterns = [
     # Главная страница (список объявлений)
@@ -18,9 +18,9 @@ urlpatterns = [
     path('proposals/', ExchangeProposalListView.as_view(), name='exchange_proposals'),
 
     # Авторизация
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('logout/', CustomLogoutView.as_view(), name='logout'),
 
     # Регистрация
-    path('register/', views.register, name='register'),
+    path('register/', RegisterView.as_view(), name='register'),
 ]

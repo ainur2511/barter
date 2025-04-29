@@ -38,7 +38,7 @@ class AdFilterForm(forms.Form):
 class ExchangeProposalForm(forms.ModelForm):
     class Meta:
         model = ExchangeProposal
-        fields = ['ad_sender', 'ad_receiver', 'comment']
+        fields = ['ad_sender', 'comment']
         widgets = {
             'comment': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Введите комментарий'}),
         }

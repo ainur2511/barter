@@ -34,8 +34,8 @@
             <div class="card-body">
                 <h5 class="card-title">Предложение #{{ proposal.id }}</h5>
                 <p class="card-text">
-                    <strong>Отправитель:</strong> {{ proposal.ad_sender.title }}<br>
-                    <strong>Получатель:</strong> {{ proposal.ad_receiver.title }}<br>
+                    <strong>Отправитель:</strong> {{ proposal.ad_sender.title }} от пользователя <strong>{{proposal.ad_sender.user}}</strong><br>
+                    <strong>Получатель:</strong> {{ proposal.ad_receiver.title }} от пользователя <strong>{{proposal.ad_receiver.user}}</strong><br>
                     <strong>Статус:</strong> {{ proposal.get_status_display }}
                 </p>
                 <p class="text-muted">{{ proposal.comment }}</p>

@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Q
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
@@ -7,7 +8,6 @@ from .models import Ad, ExchangeProposal
 from .forms import AdForm, AdFilterForm, ExchangeProposalForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
 
 
 # Главная страница (список объявлений)
@@ -75,6 +75,7 @@ class AdCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user  # Привязываем объявление к текущему пользователю
+        messages.success(self.request, "Объявление успешно добавлено!")
         return super().form_valid(form)
 
 
@@ -121,16 +122,36 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse_lazy('ad_list')
 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # Автоматически войти после регистрации
-            return redirect('ad_list')
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'
+
+    def form_valid(self, form):
+        messages.success(self.request, "Вы успешно вошли в систему!")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Неверное имя пользователя или пароль.")
+        return super().form_invalid(form)
+
+
+class CustomLogoutView(LogoutView):
+    def dispatch(self, request, *args, **kwargs):
+        messages.success(request, "Вы вышли из системы.")
+        return super().dispatch(request, *args, **kwargs)
+
+
+class RegisterView(CreateView):
+    form_class = UserCreationForm
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('login')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Вы успешно зарегистрировались! Теперь вы можете войти.")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Ошибка регистрации. Пожалуйста, исправьте ошибки в форме.")
+        return super().form_invalid(form)
 
 
 # Создание предложения
@@ -147,6 +168,7 @@ class CreateExchangeProposalView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         ad_receiver_id = self.kwargs['ad_receiver_id']
         ad_receiver = Ad.objects.get(id=ad_receiver_id)
+
         form.instance.ad_receiver = ad_receiver
         messages.success(self.request, "Предложение обмена успешно отправлено!")
         return super().form_valid(form)
@@ -172,7 +194,7 @@ class UpdateExchangeProposalStatusView(LoginRequiredMixin, UserPassesTestMixin, 
         return proposal.ad_receiver.user == self.request.user
 
     def handle_no_permission(self):
-        messages.error(self.request, "Вы не имеете права изменять статус этого предложения.")
+        messages.error(self.request, "Вы не можете изменять статус своего предложения.")
         return redirect('exchange_proposals')
 
     def form_valid(self, form):
