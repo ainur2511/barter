@@ -4,14 +4,20 @@ from django.db.models import Q
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 from .models import Ad, ExchangeProposal
 from .forms import AdForm, AdFilterForm, ExchangeProposalForm
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
+
+from .serializers import AdSerializer
 
 
 # Главная страница (список объявлений)
 class AdListView(ListView):
+    """Отображение списка объявлений"""
     model = Ad
     template_name = 'ads/ad_list.html'
     context_object_name = 'ads'
@@ -61,6 +67,7 @@ class AdListView(ListView):
 
 # Детали объявления
 class AdDetailView(DetailView):
+    """Детали одного объявления"""
     model = Ad
     template_name = 'ads/ad_detail.html'
     context_object_name = 'ad'
@@ -68,6 +75,7 @@ class AdDetailView(DetailView):
 
 # Создание объявления
 class AdCreateView(LoginRequiredMixin, CreateView):
+    """Создание объявления"""
     model = Ad
     form_class = AdForm
     template_name = 'ads/create_ad.html'
@@ -80,6 +88,7 @@ class AdCreateView(LoginRequiredMixin, CreateView):
 
 
 class AdUpdateView(LoginRequiredMixin, UpdateView):
+    """Редактирование объявления"""
     model = Ad
     form_class = AdForm
     template_name = 'ads/edit_ad.html'
@@ -102,6 +111,7 @@ class AdUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Удаление объявления"""
     model = Ad
     template_name = 'ads/ad_confirm_delete.html'
     context_object_name = 'ad'
@@ -123,6 +133,7 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 class CustomLoginView(LoginView):
+    """Кастомная авторизация"""
     template_name = 'registration/login.html'
 
     def form_valid(self, form):
@@ -135,12 +146,14 @@ class CustomLoginView(LoginView):
 
 
 class CustomLogoutView(LogoutView):
+    """Кастомный логаут"""
     def dispatch(self, request, *args, **kwargs):
         messages.success(request, "Вы вышли из системы.")
         return super().dispatch(request, *args, **kwargs)
 
 
 class RegisterView(CreateView):
+    """Представления для регистрации"""
     form_class = UserCreationForm
     template_name = 'registration/register.html'
     success_url = reverse_lazy('login')
@@ -156,6 +169,7 @@ class RegisterView(CreateView):
 
 # Создание предложения
 class CreateExchangeProposalView(LoginRequiredMixin, CreateView):
+    """Создание предложения"""
     model = ExchangeProposal
     form_class = ExchangeProposalForm
     template_name = 'ads/exchange/create_proposal.html'
@@ -167,9 +181,10 @@ class CreateExchangeProposalView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         ad_receiver_id = self.kwargs['ad_receiver_id']
-        ad_receiver = Ad.objects.get(id=ad_receiver_id)
+        ad_receiver = get_object_or_404(Ad, id=ad_receiver_id)
 
         form.instance.ad_receiver = ad_receiver
+        form.instance.ad_sender = self.request.user.ads.first()  # Привязываем объявление отправителя
         messages.success(self.request, "Предложение обмена успешно отправлено!")
         return super().form_valid(form)
 
@@ -204,6 +219,7 @@ class UpdateExchangeProposalStatusView(LoginRequiredMixin, UserPassesTestMixin, 
 
 # Просмотр предложений
 class ExchangeProposalListView(LoginRequiredMixin, ListView):
+    """Вывод списка предложений по обмену"""
     model = ExchangeProposal
     template_name = 'ads/exchange/exchange_proposals.html'
     context_object_name = 'proposals'
@@ -233,5 +249,9 @@ class ExchangeProposalListView(LoginRequiredMixin, ListView):
         return context
 
 
-
+class AdViewSet(viewsets.ModelViewSet):
+    """Вьюсет для API"""
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 

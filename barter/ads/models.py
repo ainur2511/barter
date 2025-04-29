@@ -4,13 +4,14 @@ from django.utils.timezone import now
 
 
 class Ad(models.Model):
+    """Модель объявления"""
     CONDITION_CHOICES = [
         ('new', 'Новый'),
         ('used', 'Б/у'),
     ]
 
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='registration')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ads')
     title = models.CharField(max_length=255)
     description = models.TextField()
     image_url = models.URLField(blank=True, null=True)
@@ -23,6 +24,7 @@ class Ad(models.Model):
 
 
 class ExchangeProposal(models.Model):
+    """Модель предложения обмена"""
     STATUS_CHOICES = [
         ('pending', 'Ожидает'),
         ('accepted', 'Принята'),
