@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Предложения обмена</h1>
+
+<!-- Фильтры -->
+<form method="get" class="mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <input type="text" name="sender" value="{{ filter_sender }}" class="form-control" placeholder="Объявление отправителя">
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="receiver" value="{{ filter_receiver }}" class="form-control" placeholder="Объявление получателя">
+        </div>
+        <div class="col-md-4">
+            <select name="status" class="form-select">
+                <option value="">Все статусы</option>
+                <option value="pending" {% if filter_status == "pending" %}selected{% endif %}>Ожидает</option>
+                <option value="accepted" {% if filter_status == "accepted" %}selected{% endif %}>Принята</option>
+                <option value="rejected" {% if filter_status == "rejected" %}selected{% endif %}>Отклонена</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Применить фильтр</button>
+        </div>
+    </div>
+</form>
+
+<!-- Список предложений -->
+<div class="row">
+    {% for proposal in proposals %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Предложение #{{ proposal.id }}</h5>
+                <p class="card-text">
+                    <strong>Отправитель:</strong> {{ proposal.ad_sender.title }}<br>
+                    <strong>Получатель:</strong> {{ proposal.ad_receiver.title }}<br>
+                    <strong>Статус:</strong> {{ proposal.get_status_display }}
+                </p>
+                <p class="text-muted">{{ proposal.comment }}</p>
+                <a href="{% url 'update_exchange_proposal_status' proposal.id %}" class="btn btn-primary">Изменить статус</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

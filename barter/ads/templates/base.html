@@ -1,0 +1,164 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Бартерная платформа{% endblock %}</title>
+
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Подключение Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Дополнительные стили -->
+    <style>
+        body {
+            background-color: #f8f9fa; /* Светлый фон */
+        }
+        .navbar {
+            background-color: #90aac9; /* Синий цвет для навигационной панели */
+        }
+        .navbar-brand, .nav-link {
+            color: white !important; /* Белый текст для ссылок */
+        }
+        .btn-primary {
+            background-color: #0d6efd; /* Цвет кнопок */
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7; /* Темнее при наведении */
+            border-color: #0a58ca;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Легкая тень */
+        }
+        .card-img-top {
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        /* Общие стили для кнопок */
+        .btn {
+            transition: all 0.3s ease; /* Плавные переходы */
+            border-radius: 8px; /* Скругленные углы */
+            font-weight: 500; /* Жирный шрифт */
+            padding: 0.6rem 1.2rem; /* Увеличенный размер кнопок */
+            margin: 0.5rem;
+        }
+
+        /* Наведение на кнопку */
+        .btn-primary:hover {
+            background-color: #0b5ed7; /* Темнее при наведении */
+            border-color: #0a58ca;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Легкая тень */
+        }
+
+        /* Фокус на кнопке (например, при нажатии Tab) */
+        .btn-primary:focus {
+            outline: none; /* Убираем стандартный контур */
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5); /* Подсветка вокруг кнопки */
+        }
+
+        /* Выделение активной кнопки */
+        .btn-primary:active {
+            background-color: #0a58ca; /* Еще темнее при нажатии */
+            transform: scale(0.98); /* Легкое уменьшение размера */
+        }
+
+        /* Кнопки с фоном */
+        .btn-outline-light {
+            color: white;
+            border-color: white;
+        }
+
+        .btn-outline-light:hover {
+            background-color: white;
+            color: #0d6efd;
+            border-color: white;
+        }
+
+        .btn-outline-light:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'ad_list' %}">Бартерная платформа</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="{% url 'ad_list' %}">Объявления</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="{% url 'create_ad' %}">Создать объявление</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem; color: white;"></i>
+                            <span class="navbar-text text-white fw-bold">Привет, {{ user.username }}!</span>
+                        </li>
+                        <li class="nav-item">
+                            <!-- Форма для выхода -->
+                            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-light">Выйти</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light" href="{% url 'login' %}">Войти</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light" href="{% url 'register' %}">Регистрация</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="container mt-4">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Подключение Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Скрипт для показа/скрытия пароля -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Находим все элементы с классом toggle-password
+            document.querySelectorAll('.toggle-password').forEach(toggle => {
+                const passwordField = toggle.previousElementSibling; // Предполагаем, что иконка находится после поля
+
+                toggle.addEventListener('click', function () {
+                    // Переключаем тип поля между "password" и "text"
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+
+                    // Меняем иконку глаза
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

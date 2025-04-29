@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Создать объявление</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="{{ form.title.id_for_label }}" class="form-label">Заголовок</label>
+        {{ form.title }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+        {{ form.description }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.image_url.id_for_label }}" class="form-label">URL изображения</label>
+        {{ form.image_url }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.category.id_for_label }}" class="form-label">Категория</label>
+        {{ form.category }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.condition.id_for_label }}" class="form-label">Состояние</label>
+        {{ form.condition }}
+    </div>
+    <button type="submit" class="btn btn-primary">Создать</button>
+</form>
+{% endblock %}

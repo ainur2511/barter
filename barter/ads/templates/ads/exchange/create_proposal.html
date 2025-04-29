@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Отправить предложение обмена</h1>
+<p>Вы хотите предложить обмен на объявление: "{{ ad_receiver.title }}"</p>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="{{ form.ad_sender.id_for_label }}" class="form-label">Ваше объявление</label>
+        {{ form.ad_sender }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.comment.id_for_label }}" class="form-label">Комментарий</label>
+        {{ form.comment }}
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить предложение</button>
+</form>
+{% endblock %}

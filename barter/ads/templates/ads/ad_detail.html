@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ ad.title }}</h1>
+<div class="card">
+    {% if ad.image_url %}
+    <img src="{{ ad.image_url }}" class="card-img-top" alt="{{ ad.title }}">
+    {% endif %}
+    <div class="card-body">
+        <p class="card-text">{{ ad.description }}</p>
+        <p class="text-muted">Категория: {{ ad.category }}</p>
+        <p class="text-muted">Состояние: {{ ad.get_condition_display }}</p>
+        <p class="text-muted">Автор: {{ ad.user.username }}</p>
+        <p class="text-muted">Дата создания: {{ ad.created_at }}</p>
+        <a href="{% url 'ad_list' %}" class="btn btn-secondary">Назад к списку</a>
+        {% if user.is_authenticated and ad.user == user %}
+        <a href="{% url 'edit_ad' pk=ad.pk %}" class="btn btn-primary ms-2">Редактировать</a>
+        <a href="{% url 'delete_ad' ad.id %}" class="btn btn-danger ms-2">Удалить</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

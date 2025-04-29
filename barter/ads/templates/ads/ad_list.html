@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Список объявлений</h1>
+
+<!-- Форма поиска и фильтрации -->
+<form method="get" class="mb-4">
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form.query }}
+        </div>
+        <div class="col-md-3">
+            {{ form.category }}
+        </div>
+        <div class="col-md-3">
+            {{ form.condition }}
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Применить фильтр</button>
+            <a href="{% url 'ad_list' %}" class="btn btn-secondary ms-2">Очистить</a>
+        </div>
+    </div>
+</form>
+
+<!-- Список объявлений -->
+<div class="row">
+    {% for ad in ads %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            {% if ad.image_url %}
+            <img src="{{ ad.image_url }}" class="card-img-top" alt="{{ ad.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ ad.title }}</h5>
+                <p class="card-text">{{ ad.description|truncatewords:20 }}</p>
+                <p class="text-muted">Категория: {{ ad.category }} | Состояние: {{ ad.get_condition_display }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'ad_detail' pk=ad.pk %}" class="btn btn-primary">Подробнее</a>
+                    <!-- Кнопка "Предложить обмен" -->
+                    {% if ad.user != request.user %}
+                    <a href="{% url 'create_exchange_proposal' ad_receiver_id=ad.id %}" class="btn btn-success">
+                        Предложить обмен
+                    </a>
+                    {% else %}
+                    <span class="text-muted">Ваше объявление</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+<div class="mt-4">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <!-- Ссылка на предыдущую страницу -->
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Предыдущая</span>
+            </li>
+            {% endif %}
+
+            <!-- Текущая страница -->
+            <li class="page-item disabled">
+                <span class="page-link">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            <!-- Ссылка на следующую страницу -->
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Следующая</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<!-- Выбор количества объявлений на странице -->
+<div class="mt-3 text-center">
+    <form method="get" class="d-inline-block">
+    <label for="paginate_by" class="me-2">Показывать по:</label>
+    <select name="paginate_by" id="paginate_by" onchange="this.form.submit()" class="form-select d-inline-block w-auto">
+        <option value="5" {% if request.GET.paginate_by == "5" %}selected{% endif %}>5</option>
+        <option value="10" {% if request.GET.paginate_by == "10" %}selected{% endif %}>10</option>
+        <option value="20" {% if request.GET.paginate_by == "20" %}selected{% endif %}>20</option>
+    </select>
+    <!-- Сохраняем остальные GET-параметры -->
+    {% for key, value in request.GET.items %}
+    {% if key != "paginate_by" and key != "page" %}
+    <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endif %}
+    {% endfor %}
+</form>
+</div>
+{% endblock %}
