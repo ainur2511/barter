@@ -297,3 +297,164 @@ class AdUpdateViewTest(TestCase):
         self.assertEqual(response.status_code, 200)  # Ошибка валидации, форма не отправлена
         self.ad.refresh_from_db()
         self.assertNotEqual(self.ad.title, '')  # Заголовок не должен измениться
+
+
+class AdDeleteViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='testuser', password='12345')
+        cls.ad = Ad.objects.create(
+            user=cls.user,
+            title="Объявление 1",
+            description="Описание 1",
+            category="Категория 1",
+            condition="new"
+        )
+
+    def setUp(self):
+        self.client = Client()
+        self.client.login(username='testuser', password='12345')
+
+    def test_view_url_exists_at_desired_location(self):
+        response = self.client.get(f'/{self.ad.id}/delete/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_url_accessible_by_name(self):
+        response = self.client.get(reverse('delete_ad', args=[self.ad.id]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_uses_correct_template(self):
+        response = self.client.get(reverse('delete_ad', args=[self.ad.id]))
+        self.assertTemplateUsed(response, 'ads/ad_confirm_delete.html')
+
+    def test_delete_ad_with_valid_permission(self):
+        response = self.client.post(reverse('delete_ad', args=[self.ad.id]))
+        self.assertEqual(response.status_code, 302)  # Перенаправление после успешного удаления
+        self.assertEqual(Ad.objects.count(), 0)  # Объявление должно быть удалено
+
+
+class ExchangeProposalTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Создаем пользователей
+        cls.user1 = User.objects.create_user(username='user1', password='12345')
+        cls.user2 = User.objects.create_user(username='user2', password='12345')
+
+        # Создаем объявления
+        cls.ad_sender = Ad.objects.create(
+            user=cls.user1,
+            title="Отправитель",
+            description="Описание отправителя",
+            category="Категория",
+            condition="new"
+        )
+        cls.ad_receiver = Ad.objects.create(
+            user=cls.user2,
+            title="Получатель",
+            description="Описание получателя",
+            category="Категория",
+            condition="used"
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    # Тест создания предложения обмена
+    def test_create_exchange_proposal(self):
+        self.client.login(username='user1', password='12345')
+
+        # Убедимся, что объявление получателя существует
+        ad_receiver = Ad.objects.create(
+            user=self.user2,
+            title="Объявление получателя",
+            description="Описание объявления получателя",
+            category="Категория",
+            condition="used"
+        )
+
+        # Отправляем POST-запрос для создания предложения
+        response = self.client.post(reverse('create_exchange_proposal', args=[ad_receiver.id]), {
+            'ad_sender': self.ad_sender.id,
+            'comment': 'Хочу обменять на ваше объявление',
+        })
+
+        # Проверяем, что форма не содержит ошибок
+        if response.status_code != 302:
+            print(response.context['form'].errors)  # Вывод ошибок формы
+
+        # Проверяем, что запрос успешен (перенаправление)
+        self.assertEqual(response.status_code, 302)
+
+        # Проверяем, что предложение создано
+        self.assertEqual(ExchangeProposal.objects.count(), 1)
+
+        # Проверяем данные созданного предложения
+        proposal = ExchangeProposal.objects.first()
+        self.assertEqual(proposal.ad_sender, self.ad_sender)
+        self.assertEqual(proposal.ad_receiver, ad_receiver)
+        self.assertEqual(proposal.comment, 'Хочу обменять на ваше объявление')
+
+    # Тест просмотра списка предложений
+    def test_exchange_proposal_list(self):
+        self.client.login(username='user1', password='12345')
+
+        # Создаем несколько предложений
+        ExchangeProposal.objects.create(
+            ad_sender=self.ad_sender,
+            ad_receiver=self.ad_receiver,
+            comment="Предложение 1",
+            status="pending"
+        )
+        ExchangeProposal.objects.create(
+            ad_sender=self.ad_receiver,
+            ad_receiver=self.ad_sender,
+            comment="Предложение 2",
+            status="pending"
+        )
+
+        response = self.client.get(reverse('exchange_proposals'))
+        self.assertEqual(response.status_code, 200)
+        proposals = response.context['proposals']
+        self.assertEqual(len(proposals), 2)  # Пользователь видит только свои предложения
+
+    # Тест обновления статуса предложения
+    def test_update_exchange_proposal_status(self):
+        # Создаем предложение
+        proposal = ExchangeProposal.objects.create(
+            ad_sender=self.ad_sender,
+            ad_receiver=self.ad_receiver,
+            comment="Предложение 1",
+            status="pending"
+        )
+
+        # Логинимся как получатель
+        self.client.login(username='user2', password='12345')
+
+        response = self.client.post(reverse('update_exchange_proposal_status', args=[proposal.id]), {
+            'status': 'accepted'
+        })
+        self.assertEqual(response.status_code, 302)
+        proposal.refresh_from_db()
+        self.assertEqual(proposal.status, 'accepted')
+
+    # Тест попытки обновления статуса отправителем
+    def test_update_exchange_proposal_status_by_sender(self):
+        # Создаем предложение
+        proposal = ExchangeProposal.objects.create(
+            ad_sender=self.ad_sender,
+            ad_receiver=self.ad_receiver,
+            comment="Предложение 1",
+            status="pending"
+        )
+
+        # Логинимся как отправитель
+        self.client.login(username='user1', password='12345')
+
+        response = self.client.post(reverse('update_exchange_proposal_status', args=[proposal.id]), {
+            'status': 'accepted'
+        })
+        self.assertEqual(response.status_code, 302)
+        proposal.refresh_from_db()
+        self.assertEqual(proposal.status, 'pending')  # Статус не изменился
+
+
